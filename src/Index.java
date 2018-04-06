@@ -93,20 +93,11 @@ public class Index {
         double R = 0.00; //number of relevant documents for the query
         double r_i = 0.00; //number of relevant documents containing term i
 
-        double N = allScenes.size(); //number of documents in the collection (Scene is a document)
-        double n_i; //number of documents containing term i
-
         double k_1 = k1_value; //set empirically
         double k_2 = k2_value; //set empirically
 
-        //average document length
-        double avdl = 0.00; //average length of all documents
-        double numberDocuments = 0.00;
-
 
         //TODO: calculate these values
-        double f_i = 1.0; //frequency of term i in the document
-
         //gets the frequency of each word in the query and stores it to avoid having to loop every word in the query each time
         HashMap<String, Integer> frequencyOfTerm_Q = new HashMap<>();
         for(String word: split_query) {
@@ -124,7 +115,10 @@ public class Index {
             }
         }
 
-        double qf_i = 1.0; //frequency of term i in the query
+        //gets the average number of documents
+        //average document length
+        double avdl = 0.00; //average length of all documents
+        double numberDocuments = allScenes.size();
 
         for(String key : allScenes.keySet()) {
             avdl += allScenes.get(key).size();
@@ -132,11 +126,16 @@ public class Index {
         }
         avdl = avdl/numberDocuments;
 
-        //BM25 ranking
-        double dl;
+        //BM25 ranking //TODO: frequency of term in current document.
+        double N = allScenes.size(); //number of documents in the collection (Scene is a document)
+        double n_i; //number of documents containing term i
+        double dl; //current document size (Words in the document maybe?)
+        double f_i = 0; //frequency of term in current document
+
         for(String key : allScenes.keySet()) {
-            dl = allScenes.get(key).size();
+            dl = allScenes.get(key).size(); //size of current document
             for (int i = 0; i < split_query.length; i++) {
+                double qf_i = frequencyOfTerm_Q.get(split_query[i]); //frequency of term i in the document
                 double K = k_1 * ((1 - b_value) + b_value * (dl / avdl));
                 HashMap<String, ArrayList<Integer>> possibleScenes = dataStorage.get(split_query[i]);
                 n_i = possibleScenes.size();
