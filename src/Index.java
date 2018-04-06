@@ -9,7 +9,7 @@ import java.util.*;
 public class Index {
     //Map<Term, HashMap<DocId, ArrayList<Positions>>>
     private HashMap<String, HashMap<String, ArrayList<Integer>>> dataStorage;
-    private HashMap<String, ArrayList<Integer>> All_Scenes;
+    private HashMap<String, ArrayList<Integer>> allScenes;
     private HashMap<String, String[]> sceneText;
     private double k1_value;
     private double k2_value;
@@ -18,7 +18,7 @@ public class Index {
     private Index() {
         dataStorage = new HashMap<>();
         sceneText = new HashMap<>();
-        All_Scenes = new HashMap<>();
+        allScenes = new HashMap<>();
         k1_value = 1.2;
         k2_value = 100.0;
         b_value = 0.75;
@@ -27,6 +27,8 @@ public class Index {
     public static void main(String[] args) throws IOException, ParseException {
         Index index = new Index();
         HashMap dataStorage = index.readJSON("shakespeare-scenes.json");
+        //index.documentToString();
+        index.allScenesToString();
     }
 
     private HashMap readJSON(String fileName) throws ParseException, IOException {
@@ -46,7 +48,7 @@ public class Index {
                 String text = (String) object.get("text");
                 String[] text_array = text.split("\\s+");
                 sceneText.put(sceneID, text_array); //helper collection for phrases
-                All_Scenes.put(sceneID, new ArrayList<>());
+                allScenes.put(sceneID, new ArrayList<>());
 
                 for (int x = 0; x < text_array.length; x++) {
                     if (dataStorage.containsKey(text_array[x])) {
@@ -54,12 +56,12 @@ public class Index {
                         if (valueMap.containsKey(sceneID)) {
                             valueMap.get(sceneID).add(x);
                             dataStorage.replace(text_array[x], valueMap);
-                            All_Scenes.get(sceneID).add(x);
+                            allScenes.get(sceneID).add(x);
                         } else {
                             ArrayList<Integer> newEntryList = new ArrayList<>();
                             newEntryList.add(x);
                             valueMap.put(sceneID, newEntryList);
-                            All_Scenes.get(sceneID).add(x);
+                            allScenes.get(sceneID).add(x);
                         }
                     } else {
                         //create the value hash map for the new term
@@ -70,7 +72,7 @@ public class Index {
 
                         //add key and hash map to top level hash map
                         dataStorage.put(text_array[x], newEntryMap);
-                        All_Scenes.get(sceneID).add(x);
+                        allScenes.get(sceneID).add(x);
                     }
 
                 }
@@ -82,27 +84,67 @@ public class Index {
         return dataStorage;
     }
 
-    private String calculateBM25() {
+    private double calculateBM25(String query) {
 
-        String results = "";
+        double result = 0.00;
+        String[] split_query = query.split("");
 
-        double R = 1.0; //number of relevant documents for the query
-        double r_i = 1.0; //number of relevant documents containing term i
-        double N = 1.0; //number of documents in the collection
-        double n_i = 1.0; //number of documents containing term i
+        //no relevance information, we can set r and R to 0, which would give a pi value of 0.5
+        double R = 0.00; //number of relevant documents for the query
+        double r_i = 0.00; //number of relevant documents containing term i
 
-        double K = b_value; //set empirically -- this could be incorrect as assignment specifies this value as 'b'
+        double N = allScenes.size(); //number of documents in the collection (Scene is a document)
+        double n_i; //number of documents containing term i
+
         double k_1 = k1_value; //set empirically
         double k_2 = k2_value; //set empirically
 
+        //average document length
+        double avdl = 0.00; //average length of all documents
+        double numberDocuments = 0.00;
+
+
+        //TODO: calculate these values
         double f_i = 1.0; //frequency of term i in the document
+
+        //gets the frequency of each word in the query and stores it to avoid having to loop every word in the query each time
+        HashMap<String, Integer> frequencyOfTerm_Q = new HashMap<>();
+        for(String word: split_query) {
+            if(frequencyOfTerm_Q.containsKey(word)) {
+                continue; //skip word if its already been counted.
+            }
+            int count = 0;
+            for(int x = 0 ; x < split_query.length; x++) {
+                if(split_query[x].equals(word)) {
+                    count++;
+                }
+            }
+            if(!frequencyOfTerm_Q.containsKey(word)) {
+                frequencyOfTerm_Q.put(word, count);
+            }
+        }
+
         double qf_i = 1.0; //frequency of term i in the query
 
+        for(String key : allScenes.keySet()) {
+            avdl += allScenes.get(key).size();
+            numberDocuments++;
+        }
+        avdl = avdl/numberDocuments;
 
-        //TODO: summation of this value for all terms in the query
-        Math.log(((r_i + 0.5)/(R - r_i + 0.5)/((n_i - r_i + 0.5)/(N - n_i - R + r_i + 0.5))) * (((k_1 + 1) * f_i)/(K + f_i)) * (((k_2 + 1) * qf_i)/(k_2 + qf_i)));
+        //BM25 ranking
+        double dl;
+        for(String key : allScenes.keySet()) {
+            dl = allScenes.get(key).size();
+            for (int i = 0; i < split_query.length; i++) {
+                double K = k_1 * ((1 - b_value) + b_value * (dl / avdl));
+                HashMap<String, ArrayList<Integer>> possibleScenes = dataStorage.get(split_query[i]);
+                n_i = possibleScenes.size();
+                System.out.println(Math.log(((r_i + 0.5) / (R - r_i + 0.5) / ((n_i - r_i + 0.5) / (N - n_i - R + r_i + 0.5))) * (((k_1 + 1) * f_i) / (K + f_i)) * (((k_2 + 1) * qf_i) / (k_2 + qf_i))));
+            }
+        }
 
-        return results;
+        return result;
 
     }
 
@@ -259,5 +301,17 @@ public class Index {
         }
         result.put(phrase, scenes);
         return result;
+    }
+
+    public void documentToString() {
+        for(Map.Entry entry : dataStorage.entrySet()) {
+            System.out.println(entry);
+        }
+    }
+
+    public void allScenesToString() {
+        for(Map.Entry entry : allScenes.entrySet()) {
+            System.out.println(entry);
+        }
     }
 }
