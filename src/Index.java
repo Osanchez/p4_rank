@@ -34,13 +34,13 @@ public class Index {
         Index index = new Index();
         HashMap dataStorage = index.readJSON("shakespeare-scenes.json");
         //index.calculateBM25("Q1","the king queen royalty");
-        //index.calculateBM25("Q2","servant guard soldier");
+        index.calculateBM25("Q2","servant guard soldier");
         //index.calculateBM25("Q3","hope dream sleep");
         //index.calculateBM25("Q4","ghost spirit");
         //index.calculateBM25("Q5","fool jester player");
         //index.calculateBM25("Q6","to be or not to be");
 
-        index.calculateQL("Q1","the king queen royalty");
+        //index.calculateQL("Q1","the king queen royalty");
         //index.calculateQL("Q2","servant guard soldier");
         //index.calculateQL("Q3","hope dream sleep");
         //index.calculateQL("Q4","ghost spirit");
