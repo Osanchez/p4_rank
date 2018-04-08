@@ -34,13 +34,21 @@ public class Index {
         Index index = new Index();
         HashMap dataStorage = index.readJSON("shakespeare-scenes.json");
         //index.calculateBM25("Q1","the king queen royalty");
-        index.calculateBM25("Q2","servant guard soldier");
+        //index.calculateBM25("Q2","servant guard soldier");
         //index.calculateBM25("Q3","hope dream sleep");
         //index.calculateBM25("Q4","ghost spirit");
         //index.calculateBM25("Q5","fool jester player");
         //index.calculateBM25("Q6","to be or not to be");
 
+        index.calculateQL("Q1","the king queen royalty");
+        //index.calculateQL("Q2","servant guard soldier");
+        //index.calculateQL("Q3","hope dream sleep");
+        //index.calculateQL("Q4","ghost spirit");
+        //index.calculateQL("Q5","fool jester player");
+        //index.calculateQL("Q6","to be or not to be");
+
         //index.sceneTextToString();
+        //index.documentToString();
     }
 
     private HashMap readJSON(String fileName) throws ParseException, IOException {
@@ -217,6 +225,111 @@ public class Index {
             sceneRank++;
         }
 
+    }
+
+    public double getOccurrencesCollection(HashMap<String, ArrayList<Integer>> documents) {
+        int occurrences = 0;
+        for(Map.Entry keyValue : documents.entrySet()) {
+            ArrayList<Integer> scene = (ArrayList) keyValue.getValue();
+            occurrences += scene.size();
+        }
+        return occurrences;
+    }
+
+    public double getOccurrencesDocument(String queryWord, String[] documentText) {
+        int occurrences = 0;
+        for(String word : documentText) {
+            if(word.equals(queryWord)) {
+                occurrences ++;
+            }
+        }
+        return occurrences;
+    }
+
+    public double getWordOccurrencesCollection(HashMap<String, String[]> collection) {
+        int numberWords = 0;
+        for(String[] entry : collection.values()) {
+            numberWords += entry.length;
+        }
+        return numberWords;
+    }
+
+    private void calculateQL(String queryLabel, String query) {
+        String[] splitQuery = query.split(" ");
+
+        HashMap<String, Double> results = new HashMap<>();
+
+        double fqid = 0; //number of times word qi occurs in document D
+        double cqi = 0; //number of times a query word occurs in collection of documents
+        //TODO: totals might be incorrect
+        double totalC = getWordOccurrencesCollection(sceneText); //total number of word occurrences in collection
+        double totalD; //number of words in current document
+
+        double log = 0;
+
+        for(String key : allScenes.keySet()) {
+            double total = 0;
+            totalD = sceneText.get(key).length;
+            //for every scene
+            for (String queryWord : splitQuery) {
+                if (dataStorage.get(query) != null) {
+                    HashMap<String, ArrayList<Integer>> possibleScenes = dataStorage.get(queryWord);
+                    cqi = getOccurrencesCollection(dataStorage.get(queryWord));
+                    if(possibleScenes.get(key) != null) {
+                        fqid = getOccurrencesDocument(queryWord, sceneText.get(key)); //get text of scene
+                    } else {
+                        fqid = 0;
+                    }
+                } else {
+                    fqid = 0;
+                    cqi = 0.000000000000000001; //why is it this value?
+                }
+                double numerator = (double)fqid + (mu * (cqi/totalC));
+                double denominator = totalD + mu;
+                double result = numerator/denominator;
+                if(result != 0) {
+                    log = Math.log(result);
+                }
+                total += log;
+            }
+            results.put(key, total);
+        }
+
+        Comparator<Map.Entry<String, Double>> valueComparator = (o1, o2) -> {
+            if(o1.getValue() > o2.getValue()) {
+                return -1;
+            }
+            if(o1.getValue() < o2.getValue()) {
+                return 1;
+            } else {
+                return 0;
+            }
+        };
+
+        Set<Map.Entry<String, Double>> entries = results.entrySet();
+
+        List<Map.Entry<String, Double>> listOfEntries = new ArrayList<>(entries);
+
+        Collections.sort(listOfEntries, valueComparator);
+
+        //new hash map of sorted values
+        LinkedHashMap<String, Double> sortedByValue = new LinkedHashMap<>(listOfEntries.size());
+
+        //add values back to hash map
+        for(Map.Entry<String, Double> entry : listOfEntries){
+            sortedByValue.put(entry.getKey(), entry.getValue());
+        }
+
+        int sceneRank = 1;
+
+        //TODO: optional column formatting
+        DecimalFormat dec = new DecimalFormat("#0.000");
+        for(Map.Entry entry : sortedByValue.entrySet()) {
+            String scene = entry.getKey().toString();
+            Double rankValue = (Double) entry.getValue();
+            System.out.println(queryLabel + " " + scene + "\t\t\t\t\t" + sceneRank + " " + dec.format(rankValue) + " Osanchez-ql");
+            sceneRank++;
+        }
     }
 
     public void documentToString() {
