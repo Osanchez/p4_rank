@@ -33,52 +33,50 @@ public class Index {
 
         //BM25 Calculations
         //TODO: For testing I used .txt files, but assignment wants .trecrun files. Simply change extension
-        /*
+
         HashMap bm25_q1 = index.calculateBM25("Q1","the king queen royalty");
-        index.writeFiles("bm25.txt", "Q1", bm25_q1);
+        index.writeFiles("bm25.txt", "Q1","Osanchez-bm25", bm25_q1);
 
         HashMap bm25_q2 = index.calculateBM25("Q2","servant guard soldier");
-        index.writeFiles("bm25.txt", "Q2", bm25_q2);
+        index.writeFiles("bm25.txt", "Q2","Osanchez-bm25", bm25_q2);
 
         HashMap bm25_q3 = index.calculateBM25("Q3","hope dream sleep");
-        index.writeFiles("bm25.txt", "Q3", bm25_q3);
+        index.writeFiles("bm25.txt", "Q3","Osanchez-bm25", bm25_q3);
 
         HashMap bm25_q4 = index.calculateBM25("Q4","ghost spirit");
-        index.writeFiles("bm25.txt", "Q4", bm25_q4);
+        index.writeFiles("bm25.txt", "Q4","Osanchez-bm25", bm25_q4);
 
         HashMap bm25_q5 = index.calculateBM25("Q5","fool jester player");
-        index.writeFiles("bm25.txt", "Q5", bm25_q5);
+        index.writeFiles("bm25.txt", "Q5","Osanchez-bm25", bm25_q5);
 
         HashMap bm25_q6 = index.calculateBM25("Q6","to be or not to be");
-        index.writeFiles("bm25.txt", "Q6", bm25_q6);
-        */
+        index.writeFiles("bm25.txt", "Q6","Osanchez-bm25", bm25_q6);
+
 
         //Query Likelihood
-        /*
         HashMap ql_q1 = index.calculateQL("Q1","the king queen royalty");
-        index.writeFiles("ql.txt", "Q1", ql_q1);
+        index.writeFiles("ql.txt", "Q1","Osanchez-ql", ql_q1);
 
         HashMap ql_q2 = index.calculateQL("Q2","servant guard soldier");
-        index.writeFiles("ql.txt", "Q2", ql_q2);
+        index.writeFiles("ql.txt", "Q2","Osanchez-ql", ql_q2);
 
         HashMap ql_q3 = index.calculateQL("Q3","hope dream sleep");
-        index.writeFiles("ql.txt", "Q3", ql_q3);
+        index.writeFiles("ql.txt", "Q3","Osanchez-ql", ql_q3);
 
         HashMap ql_q4 = index.calculateQL("Q4","ghost spirit");
-        index.writeFiles("ql.txt", "Q4", ql_q4);
+        index.writeFiles("ql.txt", "Q4","Osanchez-ql", ql_q4);
 
         HashMap ql_q5 = index.calculateQL("Q5","fool jester player");
-        index.writeFiles("ql.txt", "Q5", ql_q5);
+        index.writeFiles("ql.txt", "Q5","Osanchez-ql", ql_q5);
 
         HashMap ql_q6 = index.calculateQL("Q6","to be or not to be");
-        index.writeFiles("ql.txt", "Q6", ql_q6);
-        */
+        index.writeFiles("ql.txt", "Q6","Osanchez-ql", ql_q6);
 
         //index.sceneTextToString();
         //index.documentToString();
     }
 
-    private void writeFiles(String fileName, String queryLabel, HashMap<String, Double> results) {
+    private void writeFiles(String fileName, String queryLabel, String ID, HashMap<String, Double> results) {
         BufferedWriter writer = null;
         try {
             //create a temporary file
@@ -94,7 +92,7 @@ public class Index {
                 if(rankValue == 0) {
                     continue;
                 }
-                String line = String.format("%s %s %-32s %s %s %s\n", queryLabel, "skip", scene, sceneRank, dec.format(rankValue), "Osanchez-bm25");
+                String line = String.format("%s %s %-32s %s %s %s\n", queryLabel, "skip", scene, sceneRank, dec.format(rankValue), ID);
                 writer.write(line);
                 sceneRank++;
             }

@@ -1,0 +1,32 @@
+: hope dream sleep
+
+?	0: Not relevant
+?	1: Not really relevant
+?	2: Somewhat relevant
+?	3: Relevant. Note that something can be relevant even if it doesn't contain exactly those query words as a phrase. Ultimately you are the judge of relevance.
+
+Scene - Ranking - Rank Result --- Judgement
+
+---- BM25 ----
+  richard_iii:4.2                  1 5.739    --- 3
+  midsummer_nights_dream:3.0       2 5.603    --- 3
+  antony_and_cleopatra:1.0         3 5.057    --- 2
+  romeo_and_juliet:0.3             4 5.004    --- 2
+  richard_iii:0.3                  5 4.988    --- 2
+  hamlet:2.0                       6 4.783    --- 2
+  cymbeline:4.3                    7 4.678    --- 2
+  romeo_and_juliet:4.0             8 4.653    --- 2
+  twelfth_night:3.0                9 4.454    --- 1
+  cymbeline:3.1                    10 4.411   --- 1
+
+---- QL ----
+  richard_iii:4.2                  1 -19.893    --- 3
+  midsummer_nights_dream:3.0       2 -20.198    --- 2
+  richard_iii:0.3                  3 -20.845    --- 2
+  romeo_and_juliet:0.3             4 -20.917    --- 2
+  antony_and_cleopatra:1.0         5 -21.001    --- 1
+  hamlet:2.0                       6 -21.072    --- 1
+  cymbeline:3.1                    7 -21.374    --- 1
+  cymbeline:4.3                    8 -21.514    --- 1
+  romeo_and_juliet:4.0             9 -21.706    --- 1
+  richard_iii:3.1                  10 -21.866   --- 1
