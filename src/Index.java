@@ -1,6 +1,3 @@
-// Resource below was used to create method for sorting hashmaps by value
-// http://www.java67.com/2015/01/how-to-sort-hashmap-in-java-based-on.html
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -32,23 +29,85 @@ public class Index {
 
     public static void main(String[] args) throws IOException, ParseException {
         Index index = new Index();
-        HashMap dataStorage = index.readJSON("shakespeare-scenes.json");
-        index.calculateBM25("Q1","the king queen royalty");
-        //index.calculateBM25("Q2","servant guard soldier");
-        //index.calculateBM25("Q3","hope dream sleep");
-        //index.calculateBM25("Q4","ghost spirit");
-        //index.calculateBM25("Q5","fool jester player");
-        //index.calculateBM25("Q6","to be or not to be");
-        System.out.println("\n\n\n\n\n");
-        index.calculateQL("Q1","the king queen royalty");
-        //index.calculateQL("Q2","servant guard soldier");
-        //index.calculateQL("Q3","hope dream sleep");
-        //index.calculateQL("Q4","ghost spirit");
-        //index.calculateQL("Q5","fool jester player");
-        //index.calculateQL("Q6","to be or not to be");
+        index.readJSON("shakespeare-scenes.json");
+
+        //BM25 Calculations
+        /*
+        HashMap bm25_q1 = index.calculateBM25("Q1","the king queen royalty");
+        index.writeFiles("bm25.txt", "Q1", bm25_q1);
+
+        HashMap bm25_q2 = index.calculateBM25("Q2","servant guard soldier");
+        index.writeFiles("bm25.txt", "Q2", bm25_q2);
+
+        HashMap bm25_q3 = index.calculateBM25("Q3","hope dream sleep");
+        index.writeFiles("bm25.txt", "Q3", bm25_q3);
+
+        HashMap bm25_q4 = index.calculateBM25("Q4","ghost spirit");
+        index.writeFiles("bm25.txt", "Q4", bm25_q4);
+
+        HashMap bm25_q5 = index.calculateBM25("Q5","fool jester player");
+        index.writeFiles("bm25.txt", "Q5", bm25_q5);
+
+        HashMap bm25_q6 = index.calculateBM25("Q6","to be or not to be");
+        index.writeFiles("bm25.txt", "Q6", bm25_q6);
+        */
+
+        //Query Likelihood
+        /*
+        HashMap ql_q1 = index.calculateQL("Q1","the king queen royalty");
+        index.writeFiles("ql.txt", "Q1", ql_q1);
+
+        HashMap ql_q2 = index.calculateQL("Q2","servant guard soldier");
+        index.writeFiles("ql.txt", "Q2", ql_q2);
+
+        HashMap ql_q3 = index.calculateQL("Q3","hope dream sleep");
+        index.writeFiles("ql.txt", "Q3", ql_q3);
+
+        HashMap ql_q4 = index.calculateQL("Q4","ghost spirit");
+        index.writeFiles("ql.txt", "Q4", ql_q4);
+
+        HashMap ql_q5 = index.calculateQL("Q5","fool jester player");
+        index.writeFiles("ql.txt", "Q5", ql_q5);
+
+        HashMap ql_q6 = index.calculateQL("Q6","to be or not to be");
+        index.writeFiles("ql.txt", "Q6", ql_q6);
+        */
 
         //index.sceneTextToString();
         //index.documentToString();
+    }
+
+    private void writeFiles(String fileName, String queryLabel, HashMap<String, Double> results) {
+        BufferedWriter writer = null;
+        try {
+            //create a temporary file
+            File logFile = new File(fileName);
+
+            writer = new BufferedWriter(new FileWriter(logFile, true));
+
+            int sceneRank = 1;
+            DecimalFormat dec = new DecimalFormat("#0.000");
+            for(Map.Entry entry : results.entrySet()) {
+                String scene = (String) entry.getKey();
+                double rankValue = (double) entry.getValue();
+                if(rankValue == 0) {
+                    continue;
+                }
+                String line = String.format("%s %s %-32s %s %s %s\n", queryLabel, "skip", scene, sceneRank, dec.format(rankValue), "Osanchez-bm25");
+                writer.write(line);
+                sceneRank++;
+            }
+            writer.newLine();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                // Close the writer regardless of what happens...
+                writer.close();
+            } catch (Exception e) {
+            }
+        }
     }
 
     private HashMap readJSON(String fileName) throws ParseException, IOException {
@@ -104,7 +163,7 @@ public class Index {
         return dataStorage;
     }
 
-    private void calculateBM25(String queryLabel, String query) {
+    private HashMap calculateBM25(String queryLabel, String query) {
         HashMap<String, Double> calculatedResults = new HashMap<>();
 
         String[] split_query = query.split(" ");
@@ -138,9 +197,8 @@ public class Index {
         double avdl = 0.00; //average length of all documents
         int numberDocuments = allScenes.size();
 
-        for(String key : allScenes.keySet()) {
+        for(String key : allScenes.keySet()) { //Dictionary -  String SceneID : String[] Text
             avdl += allScenes.get(key).size();
-            numberDocuments++;
         }
         avdl = avdl/numberDocuments;
 
@@ -148,15 +206,16 @@ public class Index {
         int N = allScenes.size(); //number of documents in the collection (Scene is a document)
         int n_i; //number of documents containing term i
         double qf_i; //frequency of term i in query
-        int f_i = 0; //frequency of term i in current document
+        int f_i; //frequency of term i in current document
         int dl;
 
         for(String key : allScenes.keySet()) { //for every scene
             dl = allScenes.get(key).size(); //size of current document (Scene)
             double result = 0.00;
             for (String queryWord : split_query) { //for all words in the query
+                f_i = 0;
                 qf_i = frequencyOfTerm_Q.get(queryWord); //frequency of term i in the document
-                double K = k_1 * ((1 - b_value) + b_value * (dl / avdl));
+                double K = k_1 * ((1 - b_value) + (b_value * (dl / avdl)));
                 HashMap<String, ArrayList<Integer>> queryScenes = dataStorage.get(queryWord);
                 n_i = queryScenes.size(); //size;
 
@@ -175,13 +234,7 @@ public class Index {
 
                 double resultingVar;
 
-
-                if (var2 == 0)
-                    resultingVar = var1 * var3;
-                else if (var3 == 0)
-                    resultingVar = var1 * var2;
-                else
-                    resultingVar = var1 * var2 * var3;
+                resultingVar = var1 * var2 * var3;
 
                 result += resultingVar;
 
@@ -216,15 +269,14 @@ public class Index {
 
         int sceneRank = 1;
 
-        //TODO: optional column formatting
         DecimalFormat dec = new DecimalFormat("#0.000");
         for(Map.Entry entry : sortedByValue.entrySet()) {
             String scene = entry.getKey().toString();
             Double rankValue = (Double) entry.getValue();
-            System.out.println(queryLabel + " " + scene + "\t\t\t" + sceneRank + " " + dec.format(rankValue) + " Osanchez-bm25");
+            System.out.format("%s %s %-32s %s %s %s\n", queryLabel, "skip", scene, sceneRank, dec.format(rankValue), "Osanchez-bm25");
             sceneRank++;
         }
-
+        return sortedByValue;
     }
 
     public double getOccurrencesCollection(HashMap<String, ArrayList<Integer>> documents) {
@@ -254,41 +306,38 @@ public class Index {
         return numberWords;
     }
 
-    private void calculateQL(String queryLabel, String query) {
+    private HashMap calculateQL(String queryLabel, String query) {
         String[] splitQuery = query.split(" ");
 
         HashMap<String, Double> results = new HashMap<>();
 
-        double fqid = 0; //number of times word qi occurs in document D
-        double cqi = 0; //number of times a query word occurs in collection of documents
-        //TODO: totals might be incorrect
+        double fqid; //number of times word qi occurs in document D
+        double cqi; //number of times a query word occurs in collection of documents
         double totalC = getWordOccurrencesCollection(sceneText); //total number of word occurrences in collection
         double totalD; //number of words in current document
 
-        double log = 0;
 
         for(String key : allScenes.keySet()) {
-            double total = 0;
+            double total = 0.00;
+            double log;
             totalD = sceneText.get(key).length;
             //for every scene
             for (String queryWord : splitQuery) {
-                if (dataStorage.get(query) != null) {
+                if (dataStorage.get(queryWord) != null) { //collection of documents contains the query word
                     HashMap<String, ArrayList<Integer>> possibleScenes = dataStorage.get(queryWord);
-                    cqi = getOccurrencesCollection(dataStorage.get(queryWord));
-                    if(possibleScenes.get(key) != null) {
-                        fqid = getOccurrencesDocument(queryWord, sceneText.get(key)); //get text of scene
-                    } else {
-                        fqid = 0;
-                    }
-                } else {
-                    fqid = 0;
-                    cqi = 0; //TODO: might have to change to a value close to 0
+                    cqi = getOccurrencesCollection(possibleScenes);
+                    fqid = getOccurrencesDocument(queryWord, sceneText.get(key)); //get occurrences of word in scene
+                } else { //collection of documents does not contain the query word
+                    fqid = 0.00;
+                    cqi = 0.00; //value close to 0
                 }
-                double numerator = (double)fqid + (mu * (cqi/totalC));
+                double numerator = fqid + (mu * (cqi/totalC));
                 double denominator = totalD + mu;
                 double result = numerator/denominator;
                 if(result != 0) {
                     log = Math.log(result);
+                } else {
+                    log = 0;
                 }
                 total += log;
             }
@@ -322,14 +371,14 @@ public class Index {
 
         int sceneRank = 1;
 
-        //TODO: optional column formatting
         DecimalFormat dec = new DecimalFormat("#0.000");
         for(Map.Entry entry : sortedByValue.entrySet()) {
             String scene = entry.getKey().toString();
             Double rankValue = (Double) entry.getValue();
-            System.out.println(queryLabel + " " + scene + "\t\t\t" + sceneRank + " " + dec.format(rankValue) + " Osanchez-ql");
+            System.out.format("%s %s %-32s %s %s %s\n", queryLabel, "skip", scene, sceneRank, dec.format(rankValue), "Osanchez-ql");
             sceneRank++;
         }
+        return sortedByValue;
     }
 
     public void documentToString() {
