@@ -33,14 +33,14 @@ public class Index {
     public static void main(String[] args) throws IOException, ParseException {
         Index index = new Index();
         HashMap dataStorage = index.readJSON("shakespeare-scenes.json");
-        //index.calculateBM25("Q1","the king queen royalty");
-        index.calculateBM25("Q2","servant guard soldier");
+        index.calculateBM25("Q1","the king queen royalty");
+        //index.calculateBM25("Q2","servant guard soldier");
         //index.calculateBM25("Q3","hope dream sleep");
         //index.calculateBM25("Q4","ghost spirit");
         //index.calculateBM25("Q5","fool jester player");
         //index.calculateBM25("Q6","to be or not to be");
-
-        //index.calculateQL("Q1","the king queen royalty");
+        System.out.println("\n\n\n\n\n");
+        index.calculateQL("Q1","the king queen royalty");
         //index.calculateQL("Q2","servant guard soldier");
         //index.calculateQL("Q3","hope dream sleep");
         //index.calculateQL("Q4","ghost spirit");
@@ -221,7 +221,7 @@ public class Index {
         for(Map.Entry entry : sortedByValue.entrySet()) {
             String scene = entry.getKey().toString();
             Double rankValue = (Double) entry.getValue();
-            System.out.println(queryLabel + " " + scene + "\t\t\t\t\t" + sceneRank + " " + dec.format(rankValue) + " Osanchez-bm25");
+            System.out.println(queryLabel + " " + scene + "\t\t\t" + sceneRank + " " + dec.format(rankValue) + " Osanchez-bm25");
             sceneRank++;
         }
 
@@ -282,7 +282,7 @@ public class Index {
                     }
                 } else {
                     fqid = 0;
-                    cqi = 0.000000000000000001; //why is it this value?
+                    cqi = 0; //TODO: might have to change to a value close to 0
                 }
                 double numerator = (double)fqid + (mu * (cqi/totalC));
                 double denominator = totalD + mu;
@@ -327,7 +327,7 @@ public class Index {
         for(Map.Entry entry : sortedByValue.entrySet()) {
             String scene = entry.getKey().toString();
             Double rankValue = (Double) entry.getValue();
-            System.out.println(queryLabel + " " + scene + "\t\t\t\t\t" + sceneRank + " " + dec.format(rankValue) + " Osanchez-ql");
+            System.out.println(queryLabel + " " + scene + "\t\t\t" + sceneRank + " " + dec.format(rankValue) + " Osanchez-ql");
             sceneRank++;
         }
     }
