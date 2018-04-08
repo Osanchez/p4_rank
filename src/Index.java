@@ -32,6 +32,7 @@ public class Index {
         index.readJSON("shakespeare-scenes.json");
 
         //BM25 Calculations
+        //TODO: For testing I used .txt files, but assignment wants .trecrun files. Simply change extension
         /*
         HashMap bm25_q1 = index.calculateBM25("Q1","the king queen royalty");
         index.writeFiles("bm25.txt", "Q1", bm25_q1);
